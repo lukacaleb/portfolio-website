@@ -1,0 +1,46 @@
+---
+- name: Deploy Python Application
+  hosts: your_target_host
+  become: yes  # Use sudo to become a privileged user
+
+  tasks:
+    - name: Update package cache (for apt)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"  # Use this condition if your target is a Debian-based system
+
+    - name: Install system-level dependencies
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - python3
+        - python3-pip
+        - python3-venv
+      when: ansible_os_family == "Debian"  # Adjust this condition for your target OS
+
+    - name: Update package cache (for yum)
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_os_family == "RedHat"  # Use this condition if your target is a RedHat-based system
+
+    - name: Install system-level dependencies (RedHat)
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - python3
+        - python3-pip
+        - python3-virtualenv
+      when: ansible_os_family == "RedHat"  # Adjust this condition for your target OS
+
+    - name: Create a virtual environment for the Python application
+      command: python3 -m venv /path/to/venv
+      args:
+        creates: /path/to/venv  # This ensures it's only executed if the virtual environment doesn't exist yet
+
+    - name: Install Python dependencies using pip
+      pip:
+        requirements: /path/to/requirements.txt  # Path to your application's requirements file
+        virtualenv: /path/to/venv
